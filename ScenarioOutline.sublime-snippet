@@ -1,0 +1,11 @@
+<snippet>
+	<content><![CDATA[Scenario Outline: ${1:title}
+	Given ${2:<context>}
+	When ${3:<event>}
+	Then ${4:<outcome>}
+	Examples:
+		| ${5:<examples>} |]]></content>
+    <tabTrigger>sceo</tabTrigger>
+    <scope>text.gherkin.feature</scope>
+    <description>Gherkin Scenario Outline Snippet</description>
+</snippet>

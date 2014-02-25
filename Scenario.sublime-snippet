@@ -1,0 +1,9 @@
+<snippet>
+    <content><![CDATA[Scenario: ${1:<title>}
+    Given ${2:<context>}
+ 	When ${3:<event>}
+	Then ${4:<outcome>}]]></content>
+    <tabTrigger>scen</tabTrigger>
+    <scope>text.gherkin.feature</scope>
+    <description>Gherkin Scenario Snippet</description>
+</snippet>
