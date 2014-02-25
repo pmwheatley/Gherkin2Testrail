@@ -7,7 +7,11 @@ Usage
 ---
 
 * Put Gherkin2Testrail.py in your Packages/User directory
-* In Sublime Text open the Console and execute the command
+* To convert to Testrail XML, open the Console and execute the command
 ```
-view.run_command('gherkintotestrail')
+view.run_command('gherkintotestrailxml')
+```
+* To Import to a currently existing Testrail project, open the Console and execute the command
+```
+view.run_command('gherkintotestrailimportsuite')
 ```
