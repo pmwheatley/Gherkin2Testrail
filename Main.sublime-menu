@@ -1,0 +1,17 @@
+[
+	{
+		"id": "tools",
+		"children":
+		[
+			{
+				"caption": "Testrail",
+				"id": "testrail",
+				"children":
+				[
+					{ "command": "gherkintotestrailxml", "caption": "Convert current file to Testrail XML"},
+					{ "command": "gherkintotestrailimportsuite", "caption": "Import current file to Testrail"}
+				]
+			}
+		]
+	}
+]
