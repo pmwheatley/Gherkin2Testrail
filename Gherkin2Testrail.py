@@ -67,7 +67,7 @@ class gherkintotestrailimportsuiteCommand(sublime_plugin.TextCommand):
 
 		sections = {}
 		scenarios = {}
-		for i in re.findall(r'# (.*)\n((?:.*\n)*?\n)\n', s):
+		for i in re.findall(r'# (.*)\n##+\n((?:.*\n)*?\n)\n', s):
 			currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
 			section_id = None
 			for x in currSections:
