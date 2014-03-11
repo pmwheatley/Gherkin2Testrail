@@ -59,15 +59,19 @@ class gherkintotestrailimportsuiteCommand(sublime_plugin.TextCommand):
 			if x['name'] == suite_name:
 				suite_id = x['id']
 		
+		suite_description = re.sub('#( )?', '', re.search(r'Feature.*\n+(?:#\n)?((?:#.*\n)*)', s).group(1))
+		print(suite_description)
+
 		if suite_id == None:
-			suite_id = self.client.send_post('add_suite/' + str(self.currProject), {"name": suite_name})['id']
+			suite_id = self.client.send_post('add_suite/' + str(self.currProject), {"name": suite_name, "description": suite_description})['id']
 			print("Adding new Test Suite\t- id: " + str(suite_id))
 		else:
+			self.client.send_post('update_suite/' + str(suite_id), {"name": suite_name, "description": suite_description})
 			print("Updating Test Suite\t\t- id:" + str(suite_id))
 
 		sections = {}
 		scenarios = {}
-		for i in re.findall(r'# (.*)\n##+\n((?:.*\n)*?\n)\n', s):
+		for i in re.findall(r'# (.*)\n(?:@.*|Scenario.*|##.*)+\n((?:.*\n)*?\n)\n', s):
 			currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
 			section_id = None
 			for x in currSections:
