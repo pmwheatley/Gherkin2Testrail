@@ -71,7 +71,7 @@ class gherkintotestrailimportsuiteCommand(sublime_plugin.TextCommand):
 
 		sections = {}
 		scenarios = {}
-		for i in re.findall(r'# (.*)\n(?:@.*|Scenario.*|##.*)+\n((?:.*\n)*?\n)\n', s):
+		for i in re.findall(r'# (.*)\n((?:@.*|Scenario.*|##.*)+\n((?:.*\n)*?\n)\n)', s):
 			currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
 			section_id = None
 			for x in currSections:
@@ -84,7 +84,7 @@ class gherkintotestrailimportsuiteCommand(sublime_plugin.TextCommand):
 			else:
 				print("Updating Section\t\t- id: " + str(section_id))
 
-		 	for j in re.findall(r'((?:@.*)\n)*Scenario(?: Outline)*: (.*) - (.*)\n((?:.*\n)*?)\n', i[1]):
+		 	for j in re.findall(r'(?:((?:@.*\n))|#.*)*Scenario(?: Outline)*: (.*) - (.*)\n((?:.*\n)*?)\n', i[1]):
 				currScenarios = self.client.send_get('get_cases/' + str(self.currProject) + '&suite_id=' + str(suite_id) + '&section_id=' + str(section_id))
 				scenario_id = None
 				for x in currScenarios:
