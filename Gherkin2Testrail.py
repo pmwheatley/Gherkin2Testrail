@@ -20,9 +20,11 @@ class Feature(object):
 
 		for section in sections:
 			if re.search('Feature:', section):
-				self.tags = re.search('(@.*)', section).group(1).split(' ')
 				self.name = re.search('Feature: (.*)', section).group(1)
-				self.description = re.sub('(\t| ( )+)', '', re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', section).group(1))
+				if re.search('(@.*)', section):
+					self.tags = re.search('(@.*)', section).group(1).split(' ')
+				if re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', section):
+					self.description = re.sub('(\t| ( )+)', '', re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', section).group(1))
 
 			if re.search('\s*Background', section):
 				self.background = Background(section)
@@ -48,7 +50,7 @@ class Background(object):
 
 		number = 1
 		while number:
-			text, number = re.subn('((Given|When|Then)(.*\n)+?\s+)And', r'\1\2', text)
+			text, number = re.subn('((Given|When|Then)(.*\n)+?\s+)(And|But)', r'\1\2', text)
 
 		steps = re.split('(Given|When|Then)', re.sub('^(\t| ( )+)', '', re.search('Background.*\n((?:.*\n?)+)', text).group(1)))
 
@@ -75,14 +77,19 @@ class Scenario(object):
 		else:
 			self.tags = ""
 		
-		self.name = re.search('\s*Scenario:(?: )?(.*)', text).group(1)
+		self.name = re.search('\s*Scenario(?: Outline)?:(?: )?(.*)', text).group(1)
 		self.steps = []
+		self.examples = []
 
 		number = 1
 		while number:
-			text, number = re.subn('((Given|When|Then)(.*\n)+?\s+)And', r'\1\2', text)
+			text, number = re.subn('((Given|When|Then)(.*\n)+?\s+)(And|But)', r'\1\2', text)
 
-		steps = re.split('(Given|When|Then)', re.sub('^(\t| ( )+)', '', re.search('Scenario.*\n((?:.*\n?)+)', text).group(1)))
+		if re.search('\s*Examples:.*\n((?:.*\n?)+)', text):
+			self.examples = Table(re.sub('^(\t| ( )+)', '', re.search('\s*Examples:.*\n((?:.*\n?)+)', text).group(1)).splitlines())
+			print '"' + str(self.examples) + '"'
+
+		steps = re.split('(Given|When|Then|Examples:\n)', re.sub('^(\t| ( )+)', '', re.search('Scenario.*\n((?:.*\n?)+)?(?:Examples:.*)?', text).group(1)))
 
 		for i in range(1, len(steps), 2):
 			self.steps.append(Step(steps[i], steps[i+1].strip()))
@@ -97,7 +104,24 @@ class Scenario(object):
 			
 			steps = steps + '\n\t' + type + ' ' + step.text + str(step.data)
 
-		return {'title': self.name, 'bdd_tags': self.tags, 'custom_steps': steps}
+		bdd_id = re.search('(.*) - .*', self.name).group(1)
+
+		givenSteps = []
+		whenSteps = []
+		thenSteps = []
+		for step in self.steps:
+			if step.type == "Given":
+				givenSteps.append(str(step))
+			elif step.type == "When":
+				whenSteps.append(str(step))
+			elif step.type == "Then":
+				thenSteps.append(str(step))
+
+		given = '\n'.join(givenSteps)
+		when = '\n'.join(whenSteps)
+		then = '\n'.join(thenSteps)
+
+		return {'title': self.name, 'custom_bdd_id': bdd_id, 'custom_bdd_tags': ' '.join(self.tags), 'custom_bdd_given': given, 'custom_bdd_when': when, 'custom_bdd_then': then, 'custom_bdd_examples': str(self.examples)}
 
 	def featureFormat(self):
 		tags = ""
@@ -112,10 +136,15 @@ class Scenario(object):
 			
 			steps = steps + '\n\t' + type + ' ' + step.text + str(step.data)
 		
+		scenarioText = "Scenario:"
+		for i in self.steps:
+			if i.data:
+				scenarioText = "Scenario Outline:"
+
 		if tags:
-			return '%s\nScenario: %s%s' % (tags, self.name, steps)
+			return '%s\n%s %s%s' % (tags, scenarioText, self.name, steps)
 		else:
-			return 'Scenario: %s%s' % (self.name, steps)
+			return '%s %s%s' % (scenarioText, self.name, steps)
 
 	def __str__(self):
 		return self.featureFormat()
@@ -126,8 +155,7 @@ class Step(object):
 		self.lines = text.splitlines()
 		self.text = self.lines[0]
 
-
-		self.data = Table(self.lines)
+		self.data = Table(self.lines[1:])
 
 	def __str__(self):
 		if self.data:
@@ -139,19 +167,21 @@ class Table(object):
 	def __init__(self, lines):
 		self.data = {}
 
+		print lines
+
 		self.table = []
-		for line in lines[1:]:
+		for line in lines:
 			self.table.append(re.split('\s*\|\s*', line)[1:-1])
 
 		datakey = []
-		if len(lines)>1:
-			data = re.split('\s*\|\s*', lines[1])
+		if len(lines)>0:
+			data = re.split('\s*\|\s*', lines[0])
 			for i, key in enumerate(data[1:-1]):
 				datakey.append(key)
 
 		datavalue = []
-		if len(lines)>2:
-			for i, line in enumerate(lines[2:]):
+		if len(lines)>1:
+			for i, line in enumerate(lines[1:]):
 				datavalue.append([])
 				data = re.split('\s*\|\s*', line)
 				for j, value in enumerate(data[1:-1]):
@@ -241,7 +271,7 @@ class cucumber2testrailCommand(sublime_plugin.TextCommand):
 			currScenarios = self.client.send_get('get_cases/' + str(self.currProject) + '&suite_id=' + str(suite_id) + '&section_id=' + str(section_id))
 			scenario_id = None
 			for x in currScenarios:
-				if x['id'] == scenario.name:
+				if x['custom_bdd_id'] == re.search('(.*) - .*', scenario.name).group(1):
 					scenario_id = x['id']
 
 			if section_id == None:
