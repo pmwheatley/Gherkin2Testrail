@@ -16,21 +16,25 @@ class Feature(object):
 		self.background = None
 		self.scenarios = []
 
-		sections = re.split('\n\n', text)
+		testrail_sections = re.split('#### (.*)', text)
 
-		for section in sections:
-			if re.search('Feature:', section):
-				self.name = re.search('Feature: (.*)', section).group(1)
-				if re.search('(@.*)', section):
-					self.tags = re.search('(@.*)', section).group(1).split(' ')
-				if re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', section):
-					self.description = re.sub('(\t| ( )+)', '', re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', section).group(1))
+		if re.search('Feature:', testrail_sections[0]):
+			self.name = re.search('Feature: (.*)', testrail_sections[0]).group(1)
+			if re.search('(@.*)', testrail_sections[0]):
+				self.tags = re.search('(@.*)', testrail_sections[0]).group(1).split(' ')
+			if re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', testrail_sections[0]):
+				self.description = re.sub('(\t| ( )+)', '', re.search('Feature.*\n((?:\s*(?:\w.*\n?))+)', testrail_sections[0]).group(1))
 
-			if re.search('\s*Background', section):
-				self.background = Background(section)
 
-			if re.search('\s*Scenario', section):
-				self.scenarios.append(Scenario(section))
+		for i in range(1, len(testrail_sections), 2):
+			text_sections = re.split('\n\n', testrail_sections[i+1])
+
+			for text_section in text_sections:
+				if re.search('\s*Background', text_section):
+					self.background = Background(text_section)
+
+				if re.search('\s*Scenario', text_section):
+					self.scenarios.append(Scenario(text_section, testrail_sections[i]))
 
 	def __str__(self):
 		text = "%s\nFeature: %s\n%s\n\n%s\n\n" % (' '.join(self.tags), self.name, re.sub('\n', '\n\t', '\t' + self.description), self.background)
@@ -71,15 +75,18 @@ class Background(object):
 			return 'Background: %s%s' % (self.name, steps)
 
 class Scenario(object):
-	def __init__(self, text):
-		if re.match('(@.*)', text):
-			self.tags = re.match('(@.*)', text).group(1).split(' ')
+	def __init__(self, text, testrail_section):
+
+		self.testrail_section = testrail_section
+
+		if re.search('^\s*(@.*)', text):
+			self.tags = re.search('^\s*(@.*)', text).group(1).split(' ')
 		else:
 			self.tags = ""
 		
 		self.name = re.search('\s*Scenario(?: Outline)?:(?: )?(.*)', text).group(1)
 		self.steps = []
-		self.examples = []
+		self.examples = ""
 
 		number = 1
 		while number:
@@ -87,7 +94,6 @@ class Scenario(object):
 
 		if re.search('\s*Examples:.*\n((?:.*\n?)+)', text):
 			self.examples = Table(re.sub('^(\t| ( )+)', '', re.search('\s*Examples:.*\n((?:.*\n?)+)', text).group(1)).splitlines())
-			print '"' + str(self.examples) + '"'
 
 		steps = re.split('(Given|When|Then|Examples:\n)', re.sub('^(\t| ( )+)', '', re.search('Scenario.*\n((?:.*\n?)+)?(?:Examples:.*)?', text).group(1)))
 
@@ -105,6 +111,7 @@ class Scenario(object):
 			steps = steps + '\n\t' + type + ' ' + step.text + str(step.data)
 
 		bdd_id = re.search('(.*) - .*', self.name).group(1)
+		self.name = re.search('.* - (.*)', self.name).group(1)
 
 		givenSteps = []
 		whenSteps = []
@@ -121,7 +128,9 @@ class Scenario(object):
 		when = '\n'.join(whenSteps)
 		then = '\n'.join(thenSteps)
 
-		return {'title': self.name, 'custom_bdd_id': bdd_id, 'custom_bdd_tags': ' '.join(self.tags), 'custom_bdd_given': given, 'custom_bdd_when': when, 'custom_bdd_then': then, 'custom_bdd_examples': str(self.examples)}
+		examples = str(self.examples)
+
+		return {'title': self.name, 'custom_bdd_id': bdd_id, 'custom_bdd_tags': ' '.join(self.tags), 'custom_bdd_given': given, 'custom_bdd_when': when, 'custom_bdd_then': then, 'custom_bdd_examples': examples}
 
 	def featureFormat(self):
 		tags = ""
@@ -167,8 +176,6 @@ class Table(object):
 	def __init__(self, lines):
 		self.data = {}
 
-		print lines
-
 		self.table = []
 		for line in lines:
 			self.table.append(re.split('\s*\|\s*', line)[1:-1])
@@ -205,7 +212,7 @@ class Table(object):
 
 		text = ""
 		for row in self.table:
-			text = text + '\n\t\t\t| '
+			text = text + '\n    | '
 			for entry in row:
 				text = text + entry.ljust(max_length) + ' | '
 		return text
@@ -255,30 +262,28 @@ class cucumber2testrailCommand(sublime_plugin.TextCommand):
 			self.client.send_post('update_suite/' + str(suite_id), {"name": suite_name, "description": suite_description})
 			print("Updating Test Suite\t\t- id:" + str(suite_id))
 
-		currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
-		section_id = None
-		for x in currSections:
-			if x['name'] == 'name':
-				section_id = x['id']
-
-		if section_id == None:
-			section_id = self.client.send_post('add_section/' + str(self.currProject), {"suite_id": suite_id, "name": 'name'})['id']
-			print("Adding new Section\t\t- id: " + str(section_id))
-		else:
-			print("Updating Section\t\t- id: " + str(section_id))
-
 		for scenario in self.feature.scenarios:
+
+			currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
+
+			section_id = None
+			for x in currSections:
+				if x['name'] == scenario.testrail_section:
+					section_id = x['id']
+
+			print section_id
+
+			if section_id == None:
+				section_id = self.client.send_post('add_section/' + str(self.currProject), {"suite_id": suite_id, "name": scenario.testrail_section})['id']
+				print("Adding new Section\t\t- id: " + str(section_id))
+			else:
+				print("Updating Section\t\t- id: " + str(section_id))
+
 			currScenarios = self.client.send_get('get_cases/' + str(self.currProject) + '&suite_id=' + str(suite_id) + '&section_id=' + str(section_id))
 			scenario_id = None
 			for x in currScenarios:
 				if x['custom_bdd_id'] == re.search('(.*) - .*', scenario.name).group(1):
 					scenario_id = x['id']
-
-			if section_id == None:
-				section_id = self.client.send_post('add_section/' + str(self.currProject), {"suite_id": suite_id, "name": i[0]})['id']
-				print("Adding new Section\t\t- id: " + str(section_id))
-			else:
-				print("Updating Section\t\t- id: " + str(section_id))
 
 			if scenario_id == None:
 		 		scenario_id = self.client.send_post('add_case/' + str(section_id), scenario.testrailFormat())['id']
