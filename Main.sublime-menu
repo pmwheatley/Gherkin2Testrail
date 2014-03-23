@@ -9,7 +9,8 @@
 				"children":
 				[
 					{ "command": "gherkintotestrailxml", "caption": "Convert current file to Testrail XML"},
-					{ "command": "gherkintotestrailimportsuite", "caption": "Import current file to Testrail"}
+					{ "command": "gherkintotestrailimportsuite", "caption": "Import current file to Testrail"},
+					{ "command": "gherkintotestrailimportsmoketests", "caption": "Import smoke test cases to Testrail"}
 				]
 			}
 		]
