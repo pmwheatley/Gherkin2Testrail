@@ -6,7 +6,7 @@ Sublime-text plugin to translate Gherkin .feature to Testrail XML
 Usage
 ---
 
-* Put all files in your Packages/Gherkin2Testrail directory
+* Put all files in your Packages/Gherkin2Testrail directory (/Users/{user}/Library/Application Support/Sublime Text 2/Packages)
 * Menu items can be found under Tools>Testrail
 * To convert to Testrail XML, open the Console and execute the command
 ```
