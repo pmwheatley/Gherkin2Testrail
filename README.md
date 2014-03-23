@@ -16,3 +16,7 @@ view.run_command('gherkintotestrailxml')
 ```
 view.run_command('gherkintotestrailimportsuite')
 ```
+* To Import smoke test cases to a currently existing TestRail project, open the Console and execute the commend
+```
+view.run_command('gherkintotestrailimportsmoketests')
+```
