@@ -4,11 +4,11 @@
         "caption": "Testrail",
         "id": "testrail",
         "children": [{
-            "command": "gherkintotestrailxml",
+            "command": "gherkin2testrailxml",
             "caption": "Convert current file to Testrail XML"
         }, {
-            "command": "cucumber2testrail",
-            "caption": "Import current file to Testrail"
+            "command": "gherkin2testrailbulk",
+            "caption": "Import current file(s) in group to Testrail"
         }]
     }]
 }]

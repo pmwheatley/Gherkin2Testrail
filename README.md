@@ -10,9 +10,9 @@ Usage
 * Menu items can be found under Tools>Testrail
 * To convert to Testrail XML, open the Console and execute the command
 ```
-view.run_command('gherkintotestrailxml')
+view.run_command('gherkin2testrailXml')
 ```
-* To Import to a currently existing Testrail project, open the Console and execute the command
+* To perform a bulk import (from all files open in a Sublime Text Group), execute the command:
 ```
-view.run_command('gherkintotestrailimportsuite')
+view.run_command('gherkin2testrailBulk')
 ```
