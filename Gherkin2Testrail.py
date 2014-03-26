@@ -108,7 +108,7 @@ class Scenario(object):
 			else:
 				type = step.type
 			
-			steps = steps + '\n\t' + type + ' ' + step.text + str(step.data)
+			steps = steps + '\n\t' + type + ' ' + step.text + unicode(step.data)
 
 		bdd_id = re.search('(.*) - .*', self.name).group(1)
 		self.name = re.search('.* - (.*)', self.name).group(1)
@@ -143,7 +143,7 @@ class Scenario(object):
 			else:
 				type = step.type
 			
-			steps = steps + '\n\t' + type + ' ' + step.text + str(step.data)
+			steps = steps + '\n\t' + type + ' ' + step.text + unicode(step.data)
 		
 		scenarioText = "Scenario:"
 		for i in self.steps:
@@ -167,10 +167,13 @@ class Step(object):
 		self.data = Table(self.lines[1:])
 
 	def __str__(self):
+		return unicode(self).encode('utf-8')
+
+	def __unicode__(self):
 		if self.data:
-			return self.type + ' ' +  str(self.text) + ' ' + str(self.data)
+			return self.type + ' ' +  self.text + ' ' + str(self.data)
 		else:
-			return self.type + ' ' +  str(self.text)
+			return self.type + ' ' +  self.text
 
 class Table(object):
 	def __init__(self, lines):
@@ -204,6 +207,9 @@ class Table(object):
 			self.data[datakey[i]].reverse()
 
 	def __str__(self):
+		return unicode(self).encode('utf-8')
+
+	def __unicode__(self):
 		max_length=0
 		for row in self.table:
 			for entry in row:
@@ -212,9 +218,10 @@ class Table(object):
 
 		text = ""
 		for row in self.table:
-			text = text + '\n    | '
+			text = ''.join([text, '\n    | '])
 			for entry in row:
-				text = text + entry.ljust(max_length) + ' | '
+				entry = entry.ljust(max_length)
+				text = ''.join([text, entry, ' | '])
 		return text
 
 
