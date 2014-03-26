@@ -1,18 +1,20 @@
-[
-	{
-		"id": "tools",
-		"children":
-		[
-			{
-				"caption": "Testrail",
-				"id": "testrail",
-				"children":
-				[
-					{ "command": "gherkintotestrailxml", "caption": "Convert current file to Testrail XML"},
-					{ "command": "gherkintotestrailimportsuite", "caption": "Import current file to Testrail"},
-					{ "command": "gherkintotestrailimportsmoketests", "caption": "Import smoke test cases to Testrail"}
-				]
-			}
-		]
-	}
-]
+[{
+    "id": "tools",
+    "children": [{
+        "caption": "Testrail",
+        "id": "testrail",
+        "children": [{
+            "command": "gherkintotestrailxml",
+            "caption": "Convert current file to Testrail XML"
+        }, {
+            "command": "gherkintotestrailimportsuite",
+            "caption": "Import current file to Testrail"
+        }, {
+            "command": "gherkintotestrailimportsmoketests",
+            "caption": "Import Smoke Test cases to Testrail"
+        }, {
+            "command": "gherkintotestrailimportbasetests",
+            "caption": "Import Base Test cases to Testrail"
+        }]
+    }]
+}]

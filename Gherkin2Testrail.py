@@ -164,7 +164,7 @@ class gherkintotestrailimportsmoketests(sublime_plugin.TextCommand):
 		alltextreg = sublime.Region(0, self.view.size())
 		s = self.view.substr(alltextreg).strip()
         
-		suite_name = "Smoke Tests"
+		suite_name = "Smoke Test"
 		currSuites = self.client.send_get('get_suites/' + str(self.currProject))
         
         
@@ -252,7 +252,7 @@ class gherkintotestrailimportsmoketests(sublime_plugin.TextCommand):
 					print("Updating Test Case\t\t- id: " + str(scenario_id))
 
 
-class gherkintotestrailimportsmoketests(sublime_plugin.TextCommand):
+class gherkintotestrailimportbasetests(sublime_plugin.TextCommand):
 
 	def run(self, edit):
 
@@ -280,7 +280,7 @@ class gherkintotestrailimportsmoketests(sublime_plugin.TextCommand):
 		alltextreg = sublime.Region(0, self.view.size())
 		s = self.view.substr(alltextreg).strip()
 
-		suite_name = "Smoke Tests"
+		suite_name = "Base Test"
 		currSuites = self.client.send_get('get_suites/' + str(self.currProject))
 		
 
@@ -291,17 +291,17 @@ class gherkintotestrailimportsmoketests(sublime_plugin.TextCommand):
 				suite_id = x['id']
 		
 
-		# Check if 'Smoke Tests' suite exists
+		# Check if 'Base Tests' suite exists
 		if suite_id == None:
-			# Add 'Smoke Tests' suite
+			# Add 'Base Tests' suite
 			suite_id = self.client.send_post('add_suite/' + str(self.currProject), {"name": suite_name})['id']
 			print("Adding new Test Suite\t- id: " + str(suite_id))
 		else:
-			# Update 'Smoke Tests' suite
+			# Update 'Base Tests' suite
 			print("Updating Test Suite\t\t- id:" + str(suite_id))
 
 
-		# FeatureFile: Feature name -> Section in 'Smoke Tests' suite
+		# FeatureFile: Feature name -> Section in 'Base Tests' suite
 		featureFile_featureName = re.search(r'Feature: (.*)', s).group(1)
 
 		# Get Sections from TestRails
@@ -370,15 +370,12 @@ class gherkintotestrailimportsmoketests(sublime_plugin.TextCommand):
 		 		if (examples): 	scenarios[j[1]]['custom_bdd_examples'] = examples[0]
 		 		if (tags): 		scenarios[j[1]]['custom_bdd_tags'] = tags
 
-		 		# Work only with Smoke scenarios
-		 		if "@smoke" in tags:
-			 		# Add/Update TestRail testcase
-					if scenario_id == None:
-				 		scenario_id = self.client.send_post('add_case/' + str(smokeTestsSection_id), scenarios[j[1]])['id']
-				 		print("DEBUG:					Adding new Test Case\t- id: " + str(scenario_id))
-					else:
-						self.client.send_post('update_case/' + str(scenario_id), scenarios[j[1]])
-						print("DEBUG:					Updating Test Case\t\t- id: " + str(scenario_id))
+		 		# Work only with Base scenarios
+		 		# Add/Update TestRail testcase
+				if scenario_id == None:
+			 		scenario_id = self.client.send_post('add_case/' + str(smokeTestsSection_id), scenarios[j[1]])['id']
+			 		print("DEBUG:					Adding new Test Case\t- id: " + str(scenario_id))
 				else:
-					print("DEBUG:					There is no @smoke tag, so don't upload.")
+					self.client.send_post('update_case/' + str(scenario_id), scenarios[j[1]])
+					print("DEBUG:					Updating Test Case\t\t- id: " + str(scenario_id))
 
