@@ -235,6 +235,15 @@ class gherkin2testrailbulkCommand(sublime_plugin.TextCommand):
 		for project in APIProjects:
 			self.projects.append(str(project['id']) + ' - ' + project['name'])
 
+		self.view.window().show_input_panel("Enter Tags to upload [blank for all]:", "", self.onSelectTags, None, None)
+
+	def onSelectTags(self, text):
+		if (len(text) > 0):
+			args = text.split(' ')
+			self.tags = args
+		else:
+			self.tags = []
+
 		self.view.window().show_quick_panel(self.projects, self.onSelectProject)
 
 	def onSelectProject(self, index):
@@ -273,31 +282,33 @@ class gherkin2testrailbulkCommand(sublime_plugin.TextCommand):
 
 			for scenario in feature.scenarios:
 
-				currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
+				if (len(self.tags) == 0) or (len(set(scenario.tags).intersection(self.tags)) > 0):
 
-				subsection_id = None
-				for x in currSections:
-					if ((x['name'] == scenario.testrail_section) and (x['parent_id'] == section_id)):
-						subsection_id = x['id']
+					currSections = self.client.send_get('get_sections/' + str(self.currProject) + '&suite_id=' + str(suite_id))
 
-				if subsection_id == None:
-					subsection_id = self.client.send_post('add_section/' + str(self.currProject), {"suite_id": suite_id, "parent_id": section_id, "name": scenario.testrail_section})['id']
-					print("Adding new SubSection\t\t- id: " + str(subsection_id))
-				else:
-					print("Updating SubSection\t\t\t- id: " + str(subsection_id))
+					subsection_id = None
+					for x in currSections:
+						if ((x['name'] == scenario.testrail_section) and (x['parent_id'] == section_id)):
+							subsection_id = x['id']
 
-				currScenarios = self.client.send_get('get_cases/' + str(self.currProject) + '&suite_id=' + str(suite_id) + '&section_id=' + str(subsection_id))
-				scenario_id = None
-				for x in currScenarios:
-					if x['custom_bdd_id'] == re.search('(.*) - .*', scenario.name).group(1):
-						scenario_id = x['id']
+					if subsection_id == None:
+						subsection_id = self.client.send_post('add_section/' + str(self.currProject), {"suite_id": suite_id, "parent_id": section_id, "name": scenario.testrail_section})['id']
+						print("Adding new SubSection\t\t- id: " + str(subsection_id))
+					else:
+						print("Updating SubSection\t\t\t- id: " + str(subsection_id))
 
-				if scenario_id == None:
-			 		scenario_id = self.client.send_post('add_case/' + str(subsection_id), scenario.testrailFormat())['id']
-			 		print("Adding new Test Case\t\t- id: " + str(scenario_id))
-				else:
-					self.client.send_post('update_case/' + str(scenario_id), scenario.testrailFormat())
-					print("Updating Test Case\t\t\t- id: " + str(scenario_id))
+					currScenarios = self.client.send_get('get_cases/' + str(self.currProject) + '&suite_id=' + str(suite_id) + '&section_id=' + str(subsection_id))
+					scenario_id = None
+					for x in currScenarios:
+						if x['custom_bdd_id'] == re.search('(.*) - .*', scenario.name).group(1):
+							scenario_id = x['id']
+
+					if scenario_id == None:
+						scenario_id = self.client.send_post('add_case/' + str(subsection_id), scenario.testrailFormat())['id']
+						print("Adding new Test Case\t\t- id: " + str(scenario_id))
+					else:
+						self.client.send_post('update_case/' + str(scenario_id), scenario.testrailFormat())
+						print("Updating Test Case\t\t\t- id: " + str(scenario_id))
 
 
 class gherkin2testrailxmlCommand(sublime_plugin.TextCommand):
