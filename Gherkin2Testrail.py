@@ -30,10 +30,10 @@ class Feature(object):
 			text_sections = re.split('\n\n', testrail_sections[i+1])
 
 			for text_section in text_sections:
-				if re.search('\s*Background', text_section):
+				if re.search('^\s*Background:', text_section, re.MULTILINE):
 					self.background = Background(text_section)
 
-				if re.search('\s*Scenario', text_section):
+				if re.search('^\s*Scenario(?: Outline)?:', text_section, re.MULTILINE):
 					self.scenarios.append(Scenario(text_section, testrail_sections[i]))
 
 	def __str__(self):
@@ -254,7 +254,7 @@ class gherkin2testrailbulkCommand(sublime_plugin.TextCommand):
 		self.view.window().show_quick_panel(self.projects, self.onSelectProject)
 
 	def onSelectProject(self, index):
-		print "Updating Project\t\t\t" + self.projects[index]
+		print "Updating Prooject\t\t\t" + self.projects[index]
 		self.currProject = index + 1
 
 		APISuites = self.client.send_get('get_suites/' + str(self.currProject))
