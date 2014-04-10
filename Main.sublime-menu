@@ -1,18 +1,25 @@
 [{
     "id": "tools",
     "children": [{
-        "caption": "Testrail",
+        "caption": "Gherkin2TestRail",
         "id": "testrail",
         "children": [{
+            "command": "gtt_generateids",
+            "caption": "Generate Scenario IDs"
+        },
+        {
             "command": "gherkintotestrailxml",
             "caption": "Convert current file to Testrail XML"
-        }, {
+        },
+        {
             "command": "gherkintotestrailimportsuite",
             "caption": "Import current file to Testrail"
-        }, {
+        },
+        {
             "command": "gherkintotestrailimportsmoketests",
             "caption": "Import Smoke Test cases to Testrail"
-        }, {
+        },
+        {
             "command": "gherkintotestrailimportbasetests",
             "caption": "Import Base Test cases to Testrail"
         }]

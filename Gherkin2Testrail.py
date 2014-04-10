@@ -25,6 +25,43 @@ class gherkintotestrailxmlCommand(sublime_plugin.TextCommand):
 		s = re.sub(r'\t*Examples:&#xA;(.*)', r'\t\t\t\t\t\t<bdd_examples>\1</bdd_examples>', s)
 		self.view.replace(edit, alltextreg, s)
 
+
+class gtt_generateids(sublime_plugin.TextCommand):
+
+	globalCounter = 0
+
+
+	def run(self, edit):
+        
+		print "Generate Scenario IDs"
+        
+		# s = File content
+		alltextreg = sublime.Region(0, self.view.size())
+		s = self.view.substr(alltextreg).strip()
+	
+		# Get featureID    
+		featureID = re.search(r'^# (.*)', s).group(1)
+		
+		globalCounter = 0
+		print("global globalCounter = %d")%(globalCounter)
+
+		# regex replacer function
+		def dashrepl(matchobj):
+			global globalCounter
+			print("func globalCounter = %d")%(globalCounter)
+
+			globalCounter += 1			
+			globalCounterStr = ("%03d")%(globalCounter)
+			
+			return matchobj.group(1) + ': ' + featureID + globalCounterStr + ' - ' + matchobj.group(3)
+
+		# Change IDs to new ID
+		s = re.sub(r'(Scenario|Scenario Outline): .*(\d{3}) - (.*)', dashrepl, s)
+
+		# Change changes
+		self.view.replace(edit, alltextreg, s)
+
+
 class gherkintotestrailimportsuiteCommand(sublime_plugin.TextCommand):
     
 	def run(self, edit):
@@ -378,4 +415,6 @@ class gherkintotestrailimportbasetests(sublime_plugin.TextCommand):
 				else:
 					self.client.send_post('update_case/' + str(scenario_id), scenarios[j[1]])
 					print("DEBUG:					Updating Test Case\t\t- id: " + str(scenario_id))
+
+
 
