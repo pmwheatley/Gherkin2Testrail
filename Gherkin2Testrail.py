@@ -28,9 +28,7 @@ class gherkintotestrailxmlCommand(sublime_plugin.TextCommand):
 
 class gtt_generateids(sublime_plugin.TextCommand):
 
-	globalCounter = 0
-
-
+	
 	def run(self, edit):
         
 		print "Generate Scenario IDs"
@@ -41,17 +39,16 @@ class gtt_generateids(sublime_plugin.TextCommand):
 	
 		# Get featureID    
 		featureID = re.search(r'^# (.*)', s).group(1)
-		
-		globalCounter = 0
-		print("global globalCounter = %d")%(globalCounter)
+
+		self.globalCounter = 0		
+		print("global globalCounter = %d")%(self.globalCounter)
 
 		# regex replacer function
 		def dashrepl(matchobj):
-			global globalCounter
-			print("func globalCounter = %d")%(globalCounter)
+			print("func globalCounter = %d")%(self.globalCounter)
 
-			globalCounter += 1			
-			globalCounterStr = ("%03d")%(globalCounter)
+			self.globalCounter += 1			
+			globalCounterStr = ("%03d")%(self.globalCounter)
 			
 			return matchobj.group(1) + ': ' + featureID + globalCounterStr + ' - ' + matchobj.group(3)
 
