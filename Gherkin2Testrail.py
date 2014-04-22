@@ -81,8 +81,9 @@ class gherkintotestrailimportsuiteCommand(sublime_plugin.TextCommand):
     
 	def onSelectProject(self, index):
 		print "Updating Project\t\t" + self.projects[index]
-		self.currProject = index + 1
-        
+		self.currProject = int(self.projects[index].split(' ')[0])
+		print (str(self.currProject))
+
 		# s = File content
 		alltextreg = sublime.Region(0, self.view.size())
 		s = self.view.substr(alltextreg).strip()
